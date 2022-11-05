@@ -34,7 +34,7 @@ public class ClientConsole implements ChatIF {
 	ChatClient client;
 
 	/**
-	 * Scanner to read from the console
+	 * Scanner to read from the console 
 	 */
 	Scanner fromConsole;
 
@@ -52,11 +52,19 @@ public class ClientConsole implements ChatIF {
 
 		} catch (IOException exception) {
 			System.out.println("Error: Can't setup connection!" + " Terminating client.");
-			System.exit(1);
-		} 
+			System.exit(1);  
+		}  
  
 		// Create scanner object to read from console 
-		fromConsole = new Scanner(System.in);
+		fromConsole = new Scanner(System.in); 
+		//System.out.println(loginId +" has logged on.");
+//    	try {
+//			//client.sendToServer("#login " + loginId);
+//    		client.sendToServer(loginId +" has logged on.");
+//		}catch (IOException ne) {
+//			
+//		}
+		
 	}
 
 	// Instance methods ************************************************
@@ -65,22 +73,23 @@ public class ClientConsole implements ChatIF {
 	 * This method waits for input from the console. Once it is received, it sends
 	 * it to the client's message handler.
 	 */
-	public void accept() { 
+	public void accept() {
+	
 		try {
- 
 			 
-			String message;
- 
+			String message; 
+  
 			while (true) { 
 	 
-				message = fromConsole.nextLine();
+				message = fromConsole.nextLine();  
 				client.handleMessageFromClientUI(message); 
 			
 			}
 		} catch (Exception ex) {
 			System.out.println("Unexpected error while reading from console!");
-		}
-	}
+		} 
+	}  
+
 
 	/**
 	 * This method overrides the method in the ChatIF interface. It displays a
@@ -104,27 +113,33 @@ public class ClientConsole implements ChatIF {
 		String loginId = "";
 		String host = "";
 		int port = 0; 
-		
-		if(args.length != 1) {
+		 
+		if(args.length < 1) { 
+			System.out.println("ERROR - No login ID specified.  Connection aborted");
 			System.exit(0);
 		}
 		
 		else {
 			loginId = args[0];
+			
 			try {
 				host = args[1];
 				port = Integer.parseInt(args[2]);
 			} catch (ArrayIndexOutOfBoundsException e) {
-				host = "localhost";
+				host = "localhost"; 
 				port = DEFAULT_PORT;
 			} catch (NumberFormatException ne) { 
 				port = DEFAULT_PORT;
 			}
+		
+			
+			//default host ("localhost"), because no other host works:))
+			host = "localhost";
 			ClientConsole chat = new ClientConsole(host, port, loginId);
 			chat.accept(); // Wait for console data
 		} 
    
-	}
+	} 
 }
 //End of ConsoleChat class
 

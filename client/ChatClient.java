@@ -44,7 +44,7 @@ public class ChatClient extends AbstractClient {
 		this.clientUI = clientUI;
 		this.loginId = loginId;
 		openConnection();
-	}
+	} 
 
 	// Instance methods ************************************************
 	/**
@@ -53,102 +53,95 @@ public class ChatClient extends AbstractClient {
 	 * @param msg The message from the server.
 	 */
 	public void handleMessageFromServer(Object msg) {
-		clientUI.display(msg.toString());
+		System.out.println(msg.toString());
+		
 	}
 
 	/**
 	 * This method handles all data coming from the UI
 	 *
 	 * @param message The message from the UI.
+	 * @throws IOException 
 	 */
-	public void handleMessageFromClientUI(String message) {
+	public void handleMessageFromClientUI(String message) throws IOException  {
 
 		// client terminates
 		// connection to server is terminated before exiting the program
-
 		try {
-			if (message.trim().startsWith("#")) {
-				handleCommand(message); 
+			if (message.startsWith("#")) {
+				handleCommand(message);
 			}else {
 				sendToServer(message);
-			}
+			} 
+			
 		} catch (IOException e) {
 			clientUI.display("Could not send message to server.  Terminating client.");
 			quit();
-		} 
+		}  
 
 	}
+	
+	public void handleCommand(String message)  throws IOException{
 
-	public void handleCommand(String message) {
+		String[] command = message.toLowerCase().trim().split(" ");
 
-		String command = (message.substring(1, message.length())).toLowerCase();
-
-		// client terminates after connection to the server is terminated
-		if (command.equals("quit")) {
-			quit();
-		} 
-		// client disconnects from server
-		// client does not quit
-		else if (command.equals("logoff")) {
-
-			try {
-				closeConnection();
-			} catch (IOException e) {
-			}
-		}
-		// client connects to server
-		// only if client is not already connected
-		// display an error message if otherwise
-		else if (command.equals("login")) {
- 
-			if (!isConnected()) {
-				try {
-					openConnection(); 
-				} catch (IOException e) { 
+		
+		switch (command[0]) {  
+			// client terminates after connection to the server is terminated
+			case "#quit":
+				quit();
+				break;
+					
+			// client disconnects from server
+			// client does not quit	
+			case "#logoff": 
+				closeConnection(); 
+				break;
+			  
+			case "#login":
+				if (!isConnected()) {
+					openConnection();  
+				} else { 
+					clientUI.display("You are already connected to the server.");
+					sendToServer("Client Already logged in.");
 				}
-			} else {
-				clientUI.display("You are already connected to the server.");
-			}
-		} 
-		// displays the current host name
-		else if (command.equals("gethost")) {
-
-			clientUI.display(getHost());
-
-		} 
-		// displays the current port number
-		else if (command.equals("getport")) {
-
-			clientUI.display(String.valueOf(getPort()));
+				break;  
 			
-		} 
-
-		command = message.substring(1, 8);
-		String portOrHost = message.substring(9, message.length() - 1);
-		
-		// calls the setHost() method in the AbstractClient class
-		// only if the client is logged off
-		// display an error message if otherwise 
-		if (command.equals("sethost")) {
-
-			setHost(portOrHost);
+			case "#gethost":
+				clientUI.display(getHost());
+				break;
+				 
+			case "#getport":
+				clientUI.display(String.valueOf(getPort()));
+				break;
+				
+			case "#sethost":
+				if(!isConnected()) {
+					if(command.length == 2) {
+						setHost(command[1]);
+					}else {
+						System.out.println("Please provide a host name (#sethost HOSTNAME).");
+					}
+				}else {
+					System.out.println("Cannot set host while logged in, please log off (#logoff) first.");
+				}
+				break;
+				
+			case "#setport":
+				
+				if(!isConnected()) {
+					if(command.length == 2) {
+						setPort(Integer.parseInt(command[1]));
+					}else {
+						System.out.println("Please provide a port name (#sethost PORTNAME).");
+					}
+				}else {
+					System.out.println("Cannot set port while logged in, please log off (#logoff) first.");
+				}
+				break;
 		}
-		// calls the setPort() method in the AbstractClient class
-		// only if the client is logged off
-		// display an error message if otherwise
-		else if (command.equals("setport")) {
-
-			setPort(Integer.parseInt(portOrHost));
-		}
-
-		else {
-			// command does not exist (list of commands)
-			clientUI.display(message.trim() 
-					+ " does not exist. The available list of commands are: #quit, #logoff, #sethost<host>, "
-					+ "#setport<port>, #login, #gethost, #getport");
-		}
-		
 	}
+
 
 	/**
 	 * This method terminates the client.
@@ -159,6 +152,13 @@ public class ChatClient extends AbstractClient {
 		} catch (IOException e) {
 		}
 		System.exit(0);
+	}
+	
+	public void setLoginId(String loginId) {
+		this.loginId = loginId;
+	}
+	public String getLoginId() {
+		return this.loginId;
 	}
 
 	/**
@@ -171,9 +171,25 @@ public class ChatClient extends AbstractClient {
 	@Override
 	protected void connectionException(Exception exception) {
 		clientUI.display("Sorry, the server has shut down.");
-		quit();
+		quit(); 
 	}
 
+	/**
+	 * Hook method called after a connection has been established. The default
+	 * implementation does nothing. It may be overridden by subclasses to do
+	 * anything they wish.
+	 */
+	protected void connectionEstablished() {
+		
+		try {
+			//client.sendToServer("#login " + loginId);
+    		sendToServer(loginId +" has logged on.");
+		}catch (IOException ne) {
+			
+		}
+	} 
+	
+	
 	/**
 	 * Implemented hook method called after the connection has been closed. The
 	 * default implementation does nothing. The method may be overriden by
@@ -184,6 +200,7 @@ public class ChatClient extends AbstractClient {
 	protected void connectionClosed() {
 		clientUI.display("Connection closed.");
 	}
+
 
 }
 
